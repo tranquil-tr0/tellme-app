@@ -6,7 +6,6 @@ import { SplashScreen } from 'expo-router'
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 
 export default function RootLayout() {
-  useFrameworkReady();
   const [fontsLoaded] = useFonts({
     Inter_400Regular,
     Inter_600SemiBold,
@@ -19,9 +18,7 @@ export default function RootLayout() {
     }
   }, [fontsLoaded]);
 
-  useEffect(() => {
-    window.frameworkReady?.();
-  }, []);
+  useFrameworkReady();
 
   if (!fontsLoaded) {
     return null;

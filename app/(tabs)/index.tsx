@@ -26,30 +26,39 @@ export default function EventsScreen() {
         return;
       }
 
-      const { status } = await Calendar.requestCalendarPermissionsAsync();
-      setHasPermission(status === 'granted');
+      try {
+        const { status } = await Calendar.requestCalendarPermissionsAsync();
+        setHasPermission(status === 'granted');
 
-      if (status === 'granted') {
-        const calendars = await Calendar.getCalendarsAsync(Calendar.EntityTypes.EVENT);
-        const defaultCalendar = calendars[0];
+        if (status === 'granted') {
+          const calendars = await Calendar.getCalendarsAsync(Calendar.EntityTypes.EVENT);
+          
+          if (calendars.length === 0) {
+            console.log('No calendars found');
+            return;
+          }
 
-        const startDate = new Date();
-        const endDate = new Date();
-        endDate.setDate(endDate.getDate() + 7);
+          const calendarIds = calendars.map(calendar => calendar.id);
+          const startDate = new Date();
+          const endDate = new Date();
+          endDate.setDate(endDate.getDate() + 7);
 
-        const eventsList = await Calendar.getEventsAsync(
-          [defaultCalendar.id],
-          startDate,
-          endDate
-        );
+          const eventsList = await Calendar.getEventsAsync(
+            calendarIds,
+            startDate,
+            endDate
+          );
 
-        setEvents(eventsList.map(event => ({
-          id: event.id,
-          title: event.title,
-          startDate: new Date(event.startDate),
-          endDate: new Date(event.endDate),
-          selected: false,
-        })));
+          setEvents(eventsList.map(event => ({
+            id: event.id,
+            title: event.title,
+            startDate: new Date(event.startDate),
+            endDate: new Date(event.endDate),
+            selected: false,
+          })));
+        }
+      } catch (error) {
+        console.error('Error fetching calendar events:', error);
       }
     })();
   }, []);
@@ -64,9 +73,20 @@ export default function EventsScreen() {
 
   const handleCreateAlarms = () => {
     const selectedEvents = events.filter(event => event.selected);
-    // Here you would typically pass the selected events to create alarms
-    // For now, we'll just navigate back to the alarms screen
-    router.push('/alarms');
+    
+    // Convert selected events to alarm format
+    const newAlarms = selectedEvents.map(event => ({
+      id: `alarm-${event.id}`,
+      title: event.title,
+      time: format(event.startDate, 'h:mm a'),
+      days: [format(event.startDate, 'EEE')], // Get day of week abbreviation
+    }));
+
+    // Pass the alarms data through router
+    router.push({
+      pathname: '/alarms',
+      params: { newAlarms: JSON.stringify(newAlarms) }
+    });
   };
 
   if (Platform.OS === 'web') {

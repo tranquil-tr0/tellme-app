@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet, Switch, Platform } from 'react-native';
+import { View, Text, Switch, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { styles } from '../components/tabs/settings';
 
 export default function SettingsScreen() {
   const [notificationsEnabled, setNotificationsEnabled] = React.useState(true);
@@ -47,43 +48,3 @@ export default function SettingsScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F2F2F7',
-  },
-  title: {
-    fontSize: 34,
-    fontFamily: 'Inter_700Bold',
-    color: '#000',
-    padding: 16,
-  },
-  section: {
-    backgroundColor: '#FFF',
-    borderRadius: 12,
-    margin: 16,
-    overflow: 'hidden',
-  },
-  settingItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E5EA',
-  },
-  settingLabel: {
-    fontSize: 17,
-    fontFamily: 'Inter_400Regular',
-    color: '#000',
-  },
-  webNotice: {
-    fontSize: 14,
-    fontFamily: 'Inter_400Regular',
-    color: '#666',
-    textAlign: 'center',
-    padding: 16,
-    fontStyle: 'italic',
-  },
-});

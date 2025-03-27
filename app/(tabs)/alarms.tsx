@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Platform, Alert } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, Platform, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Trash2 } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useLocalSearchParams } from 'expo-router';
+import { styles } from '../components/tabs/alarms';
 
 interface Alarm {
   id: string;
@@ -29,15 +31,43 @@ const DEFAULT_ALARMS: Alarm[] = [
   },
 ];
 
+
 export default function AlarmsScreen() {
   const [alarms, setAlarms] = useState<Alarm[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
+  const params = useLocalSearchParams();
 
   // Load alarms from storage
   useEffect(() => {
     loadAlarms();
   }, []);
+
+  // Handle new alarms when they arrive
+  useEffect(() => {
+    console.log('newAlarms params:', params.newAlarms); // Add this line
+    if (params.newAlarms) {
+      try {
+        const newAlarms = JSON.parse(params.newAlarms as string) as Alarm[];
+        addNewAlarms(newAlarms);
+      } catch (error) {
+        console.error('Error parsing new alarms:', error);
+        Alert.alert('Error', 'Failed to add new alarms');
+      }
+    }
+  }, [params.newAlarms]);
+
+  const addNewAlarms = async (newAlarms: Alarm[]) => {
+    try {
+      const updatedAlarms = [...alarms, ...newAlarms];
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updatedAlarms));
+      setAlarms(updatedAlarms);
+      Alert.alert('Success', 'Alarms have been created successfully');
+    } catch (error) {
+      console.error('Error adding new alarms:', error);
+      Alert.alert('Error', 'Failed to add new alarms');
+    }
+  };
 
   const loadAlarms = async () => {
     try {
@@ -78,7 +108,7 @@ export default function AlarmsScreen() {
               console.error('Error deleting alarm:', error);
               Alert.alert('Error', 'Failed to delete alarm');
             }
-          },
+          }
         },
       ],
     );
@@ -154,111 +184,3 @@ export default function AlarmsScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F2F2F7',
-  },
-  title: {
-    fontSize: 34,
-    fontFamily: 'Inter_700Bold',
-    color: '#000',
-    padding: 16,
-  },
-  listContent: {
-    padding: 16,
-    flexGrow: 1,
-  },
-  alarmCard: {
-    backgroundColor: '#FFF',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  alarmInfo: {
-    flex: 1,
-  },
-  alarmTime: {
-    fontSize: 24,
-    fontFamily: 'Inter_600SemiBold',
-    color: '#007AFF',
-  },
-  alarmTitle: {
-    fontSize: 17,
-    fontFamily: 'Inter_400Regular',
-    color: '#000',
-    marginTop: 4,
-  },
-  daysContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginTop: 8,
-  },
-  dayPill: {
-    backgroundColor: '#E5E5EA',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    marginRight: 6,
-    marginBottom: 6,
-    fontSize: 12,
-    fontFamily: 'Inter_400Regular',
-  },
-  deleteButton: {
-    padding: 8,
-  },
-  addButton: {
-    backgroundColor: '#007AFF',
-    margin: 16,
-    padding: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  addButtonText: {
-    color: '#FFF',
-    fontSize: 17,
-    fontFamily: 'Inter_600SemiBold',
-  },
-  noPermission: {
-    fontSize: 16,
-    fontFamily: 'Inter_400Regular',
-    color: '#666',
-    textAlign: 'center',
-    padding: 20,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    fontSize: 16,
-    fontFamily: 'Inter_400Regular',
-    color: '#666',
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 32,
-  },
-  emptyText: {
-    fontSize: 18,
-    fontFamily: 'Inter_600SemiBold',
-    color: '#666',
-    marginBottom: 8,
-  },
-  emptySubtext: {
-    fontSize: 14,
-    fontFamily: 'Inter_400Regular',
-    color: '#999',
-  },
-});
